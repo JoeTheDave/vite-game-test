@@ -1,4 +1,4 @@
-import Game from "./game";
+import Game from '@/lib/game'
 
-const game = new Game();
-game.initialize();
+const game = new Game()
+game.initialize()
