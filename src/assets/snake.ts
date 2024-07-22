@@ -1,7 +1,14 @@
 import Renderer from '@/lib/renderer'
 import { Position, GameObject } from '@/lib/types'
 import Particle from '@/assets/particle'
-import { degreesToRadians, distanceBetween, angleBetween, radiansToDegrees } from '@/lib/util'
+import {
+  degreesToRadians,
+  distanceBetween,
+  angleBetween,
+  radiansToDegrees,
+  angleBetweenPoints,
+  getRotatedPoint,
+} from '@/lib/util'
 
 export type ParticleInitializationOptions = {
   position: Position
@@ -49,6 +56,7 @@ export default class Snake implements GameObject {
       if (idx === 0) {
         return
       }
+      // Follow the previous segment
       const prevSegment = this.segments[idx - 1]
       const distance = distanceBetween(prevSegment.position, segment.position)
       const correctionDistance = distance - prevSegment.radius
@@ -59,11 +67,32 @@ export default class Snake implements GameObject {
       const y = correctionDistance * Math.sin(correctionAngle)
       segment.position = { x: segment.position.x + x, y: segment.position.y + y }
       segment.direction = radiansToDegrees(correctionAngle)
+
+      // Adjust position to correct for too sharp angle
+      const anglularAllowance = 30
+      if (idx > 1) {
+        const startSegment = this.segments[idx - 2]
+        const midSegment = this.segments[idx - 1]
+        const angle = angleBetweenPoints(startSegment.position, midSegment.position, segment.position)
+        const minAngle = 180 - anglularAllowance
+        const maxAngle = 180 + anglularAllowance
+        if (angle < minAngle) {
+          const correctionAngle = minAngle - angle
+          segment.position = getRotatedPoint(midSegment.position, segment.position, correctionAngle)
+        }
+        if (angle > maxAngle) {
+          const correctionAngle = maxAngle - angle
+          segment.position = getRotatedPoint(midSegment.position, segment.position, correctionAngle)
+        }
+      }
     })
   }
 
   render = () => {
+    // Render Circles
     this.segments.forEach(segment => segment.render())
+
+    // Render Spine
     this.segments.forEach((segment, idx) => {
       if (idx === 0) {
         this.renderer.ctx.beginPath()
