@@ -32,3 +32,10 @@ export const getRotatedPoint = (centerPoint: Position, transientPoint: Position,
   const ny = sin * (transientPoint.x - centerPoint.x) + cos * (transientPoint.y - centerPoint.y) + centerPoint.y
   return { x: nx, y: ny }
 }
+
+export const getRadialPoint = (centerPoint: Position, radius: number, angle: number) => {
+  return {
+    x: centerPoint.x + radius * Math.cos(degreesToRadians(angle)),
+    y: centerPoint.y + radius * Math.sin(degreesToRadians(angle)),
+  }
+}

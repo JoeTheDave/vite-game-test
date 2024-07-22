@@ -8,6 +8,7 @@ import {
   radiansToDegrees,
   angleBetweenPoints,
   getRotatedPoint,
+  getRadialPoint,
 } from '@/lib/util'
 
 export type ParticleInitializationOptions = {
@@ -54,6 +55,7 @@ export default class Snake implements GameObject {
   update = () => {
     this.segments.forEach((segment, idx) => {
       if (idx === 0) {
+        segment.direction = this.direction
         return
       }
       // Follow the previous segment
@@ -90,22 +92,59 @@ export default class Snake implements GameObject {
 
   render = () => {
     // Render Circles
-    this.segments.forEach(segment => segment.render())
+    // this.segments.forEach(segment => segment.render())
+
+    for (let i = 0; i < this.segments.length; i++) {
+      const segment = this.segments[i]
+      if (i === 0) {
+        for (let r = segment.direction - 90; r <= segment.direction + 90; r += 30) {
+          const { x, y } = getRadialPoint(segment.position, segment.radius, r)
+          if (r === segment.direction - 90) {
+            this.renderer.ctx.beginPath()
+            this.renderer.ctx.moveTo(x, y)
+          } else {
+            this.renderer.ctx.lineTo(x, y)
+          }
+        }
+      } else if (i === this.segments.length - 1) {
+        for (let r = segment.direction + 90; r <= segment.direction + 270; r += 30) {
+          const { x, y } = getRadialPoint(segment.position, segment.radius, r)
+          this.renderer.ctx.lineTo(x, y)
+        }
+      } else {
+        const { x, y } = getRadialPoint(segment.position, segment.radius, segment.direction + 90)
+        this.renderer.ctx.lineTo(x, y)
+      }
+    }
+    for (let i = this.segments.length - 2; i >= 0; i--) {
+      if (i > 0) {
+        const segment = this.segments[i]
+        const { x, y } = getRadialPoint(segment.position, segment.radius, segment.direction - 90)
+        this.renderer.ctx.lineTo(x, y)
+      } else {
+        this.renderer.ctx.closePath()
+        this.renderer.ctx.strokeStyle = '#F00'
+        this.renderer.ctx.lineWidth = 3
+        this.renderer.ctx.fillStyle = '#0B0'
+        this.renderer.ctx.stroke()
+        this.renderer.ctx.fill()
+      }
+    }
 
     // Render Spine
-    this.segments.forEach((segment, idx) => {
-      if (idx === 0) {
-        this.renderer.ctx.beginPath()
-        const { x, y } = segment.position
-        this.renderer.ctx.moveTo(x, y)
-      } else {
-        const { x, y } = segment.position
-        this.renderer.ctx.lineTo(x, y)
-        if ((idx = this.segments.length - 1)) {
-          this.renderer.ctx.strokeStyle = 'white'
-          this.renderer.ctx.stroke()
-        }
-      }
-    })
+    // this.segments.forEach((segment, idx) => {
+    //   if (idx === 0) {
+    //     this.renderer.ctx.beginPath()
+    //     const { x, y } = segment.position
+    //     this.renderer.ctx.moveTo(x, y)
+    //   } else {
+    //     const { x, y } = segment.position
+    //     this.renderer.ctx.lineTo(x, y)
+    //     if ((idx = this.segments.length - 1)) {
+    //       this.renderer.ctx.strokeStyle = '#666'
+    //       this.renderer.ctx.stroke()
+    //     }
+    //   }
+    // })
   }
 }

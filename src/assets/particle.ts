@@ -25,8 +25,8 @@ export default class Particle implements GameObject {
 
   render = () => {
     const { x, y } = this.position
-    this.renderer.rotate(this.position, this.direction)
-    this.renderer.drawCircle(x, y, this.radius)
-    this.renderer.clearRotation()
+    // this.renderer.rotate(this.position, this.direction)
+    this.renderer.drawCircle(x, y, this.radius, '#666')
+    // this.renderer.clearRotation()
   }
 }

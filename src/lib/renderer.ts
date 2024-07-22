@@ -22,13 +22,11 @@ export default class Renderer {
     this.ctx.fillText(text, x, y)
   }
 
-  drawCircle = (x: number, y: number, radius: number) => {
+  drawCircle = (x: number, y: number, radius: number, color: string) => {
     this.ctx.beginPath()
     this.ctx.arc(x, y, radius, 0, Math.PI * 2)
-    //this.ctx.fillStyle = 'red'
-    this.ctx.strokeStyle = 'white'
+    this.ctx.strokeStyle = color
     this.ctx.stroke()
-    // ctx.fill();
     this.ctx.closePath()
   }
 
@@ -56,6 +54,7 @@ export default class Renderer {
   }
 
   drawGridLines = () => {
+    this.ctx.lineWidth = 1
     const lineSpacing = 50
     const beginX = (this.canvas.width / 2) % lineSpacing
     const beginY = (this.canvas.height / 2) % lineSpacing
