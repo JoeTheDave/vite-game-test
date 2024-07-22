@@ -22,6 +22,11 @@ export default class GameData {
     this.elapsedTime = 0
     this.assets = []
 
+    const segments: number[] = [40]
+    for (let i = 0; i < 40; i++) {
+      segments.push(Math.abs(segments[segments.length - 1] + Math.round(Math.random() * 2 - 1) - 1))
+    }
+
     this.assets.push(
       new Snake({
         position: {
@@ -29,7 +34,8 @@ export default class GameData {
           y: this.renderer.canvas.height / 2,
         },
         direction: 30,
-        segments: [40, 45, 50, 50, 45, 40, 35, 30, 25, 25, 25, 25, 20],
+
+        segments,
         renderer: this.renderer,
       }),
     )
@@ -43,26 +49,19 @@ export default class GameData {
     this.delta = delta
     this.frames++
 
-    if (this.keys['a'] && (this.keys['w'] || this.keys['s'])) {
-      this.assets[0].direction -= (180 * this.delta) / 1000
+    const speed = 300
+    const turnSpeed = 360
+
+    if (this.keys['a'] && this.keys['w']) {
+      this.assets[0].direction -= (turnSpeed * this.delta) / 1000
     }
 
-    if (this.keys['d'] && (this.keys['w'] || this.keys['s'])) {
-      this.assets[0].direction += (180 * this.delta) / 1000
+    if (this.keys['d'] && this.keys['w']) {
+      this.assets[0].direction += (turnSpeed * this.delta) / 1000
     }
 
     if (this.keys['w']) {
-      const movement = (300 * this.delta) / 1000
-      const radians = degreesToRadians(this.assets[0].direction)
-      const x = movement * Math.cos(radians)
-      const y = movement * Math.sin(radians)
-      this.assets[0].position.x += x
-      this.assets[0].position.y += y
-      this.assets[0].update()
-    }
-
-    if (this.keys['s']) {
-      const movement = (-300 * this.delta) / 1000
+      const movement = (speed * this.delta) / 1000
       const radians = degreesToRadians(this.assets[0].direction)
       const x = movement * Math.cos(radians)
       const y = movement * Math.sin(radians)

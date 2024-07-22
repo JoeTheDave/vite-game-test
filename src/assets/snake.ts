@@ -71,7 +71,7 @@ export default class Snake implements GameObject {
       segment.direction = radiansToDegrees(correctionAngle)
 
       // Adjust position to correct for too sharp angle
-      const anglularAllowance = 30
+      const anglularAllowance = 60
       if (idx > 1) {
         const startSegment = this.segments[idx - 2]
         const midSegment = this.segments[idx - 1]
@@ -94,42 +94,64 @@ export default class Snake implements GameObject {
     // Render Circles
     // this.segments.forEach(segment => segment.render())
 
+    const points: Position[] = []
     for (let i = 0; i < this.segments.length; i++) {
       const segment = this.segments[i]
       if (i === 0) {
-        for (let r = segment.direction - 90; r <= segment.direction + 90; r += 30) {
-          const { x, y } = getRadialPoint(segment.position, segment.radius, r)
-          if (r === segment.direction - 90) {
-            this.renderer.ctx.beginPath()
-            this.renderer.ctx.moveTo(x, y)
-          } else {
-            this.renderer.ctx.lineTo(x, y)
-          }
+        for (let r = segment.direction - 120; r <= segment.direction + 120; r += 30) {
+          points.push(getRadialPoint(segment.position, segment.radius, r))
         }
       } else if (i === this.segments.length - 1) {
-        for (let r = segment.direction + 90; r <= segment.direction + 270; r += 30) {
-          const { x, y } = getRadialPoint(segment.position, segment.radius, r)
-          this.renderer.ctx.lineTo(x, y)
+        for (let r = segment.direction + 60; r <= segment.direction + 300; r += 30) {
+          points.push(getRadialPoint(segment.position, segment.radius, r))
         }
       } else {
-        const { x, y } = getRadialPoint(segment.position, segment.radius, segment.direction + 90)
-        this.renderer.ctx.lineTo(x, y)
+        points.push(getRadialPoint(segment.position, segment.radius, segment.direction + 60))
+        points.push(getRadialPoint(segment.position, segment.radius, segment.direction + 90))
+        points.push(getRadialPoint(segment.position, segment.radius, segment.direction + 120))
       }
     }
-    for (let i = this.segments.length - 2; i >= 0; i--) {
-      if (i > 0) {
-        const segment = this.segments[i]
-        const { x, y } = getRadialPoint(segment.position, segment.radius, segment.direction - 90)
-        this.renderer.ctx.lineTo(x, y)
-      } else {
-        this.renderer.ctx.closePath()
-        this.renderer.ctx.strokeStyle = '#F00'
-        this.renderer.ctx.lineWidth = 3
-        this.renderer.ctx.fillStyle = '#0B0'
-        this.renderer.ctx.stroke()
-        this.renderer.ctx.fill()
-      }
+    for (let i = this.segments.length - 2; i > 0; i--) {
+      const segment = this.segments[i]
+      points.push(getRadialPoint(segment.position, segment.radius, segment.direction - 120))
+      points.push(getRadialPoint(segment.position, segment.radius, segment.direction - 90))
+      points.push(getRadialPoint(segment.position, segment.radius, segment.direction - 60))
     }
+
+    // Draw outline points
+    // points.forEach(point => this.renderer.drawCircle(point.x, point.y, 2, 'red'))
+
+    // Fill Shape with gradient
+    for (let i = this.segments.length - 1; i >= 0; i--) {
+      const segment = this.segments[i]
+      const gradient = this.renderer.ctx.createRadialGradient(
+        segment.position.x,
+        segment.position.y,
+        i % 2 === 0 ? 0 : segment.radius,
+        segment.position.x,
+        segment.position.y,
+        i % 2 === 0 ? segment.radius : 0,
+      )
+      gradient.addColorStop(0, '#080')
+      gradient.addColorStop(1, '#070')
+
+      this.renderer.drawCircle({
+        position: segment.position,
+        radius: segment.radius,
+        fillColor: gradient,
+        strokeColor: '',
+      })
+    }
+
+    // Draw outline
+    this.renderer.drawSmoothShape(points, '#0A0', 'transparent')
+
+    // Draw Eyes
+    const headSegment = this.segments[0]
+    const leftEyePosition = getRadialPoint(headSegment.position, headSegment.radius * 0.75, headSegment.direction - 30)
+    const rightEyePosition = getRadialPoint(headSegment.position, headSegment.radius * 0.75, headSegment.direction + 30)
+    this.renderer.drawCircle({ position: leftEyePosition, radius: 5, fillColor: '#A00', strokeColor: '' })
+    this.renderer.drawCircle({ position: rightEyePosition, radius: 5, fillColor: '#A00', strokeColor: '' })
 
     // Render Spine
     // this.segments.forEach((segment, idx) => {

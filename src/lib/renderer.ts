@@ -22,12 +22,28 @@ export default class Renderer {
     this.ctx.fillText(text, x, y)
   }
 
-  drawCircle = (x: number, y: number, radius: number, color: string) => {
+  drawCircle = ({
+    position,
+    radius,
+    strokeColor,
+    fillColor,
+  }: {
+    position: Position
+    radius: number
+    strokeColor: string
+    fillColor: string | CanvasGradient
+  }) => {
     this.ctx.beginPath()
-    this.ctx.arc(x, y, radius, 0, Math.PI * 2)
-    this.ctx.strokeStyle = color
-    this.ctx.stroke()
+    this.ctx.arc(position.x, position.y, radius, 0, Math.PI * 2)
     this.ctx.closePath()
+    if (strokeColor) {
+      this.ctx.strokeStyle = strokeColor
+      this.ctx.stroke()
+    }
+    if (fillColor) {
+      this.ctx.fillStyle = fillColor
+      this.ctx.fill()
+    }
   }
 
   drawLine = (x1: number, y1: number, x2: number, y2: number, color: string) => {
@@ -36,6 +52,37 @@ export default class Renderer {
     this.ctx.lineTo(x2, y2)
     this.ctx.strokeStyle = color
     this.ctx.stroke()
+  }
+
+  drawSmoothShape(points: Position[], strokeColor: string, fillColor: string | CanvasGradient) {
+    if (points.length < 2) return
+
+    this.ctx.beginPath()
+    this.ctx.moveTo(points[0].x, points[0].y)
+
+    for (let i = 0; i < points.length; i++) {
+      const p0 = points[(i - 1 + points.length) % points.length]
+      const p1 = points[i]
+      const p2 = points[(i + 1) % points.length]
+      const p3 = points[(i + 2) % points.length]
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6
+      const cp1y = p1.y + (p2.y - p0.y) / 6
+      const cp2x = p2.x - (p3.x - p1.x) / 6
+      const cp2y = p2.y - (p3.y - p1.y) / 6
+
+      this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y)
+    }
+    this.ctx.closePath()
+    if (fillColor) {
+      this.ctx.fillStyle = fillColor
+      this.ctx.fill()
+    }
+    if (strokeColor) {
+      this.ctx.strokeStyle = strokeColor
+      this.ctx.lineWidth = 2
+      this.ctx.stroke()
+    }
   }
 
   rotate = (position: Position, rotationAngle: number) => {
