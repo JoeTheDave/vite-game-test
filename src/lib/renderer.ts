@@ -30,24 +30,27 @@ export default class Renderer {
   }: {
     position: Position
     radius: number
-    strokeColor: string
-    fillColor: string | CanvasGradient
+    strokeColor?: string
+    fillColor?: string | CanvasGradient
   }) => {
     this.ctx.beginPath()
     this.ctx.arc(position.x, position.y, radius, 0, Math.PI * 2)
     this.ctx.closePath()
-    if (strokeColor) {
-      this.ctx.strokeStyle = strokeColor
-      this.ctx.stroke()
-    }
+
     if (fillColor) {
       this.ctx.fillStyle = fillColor
       this.ctx.fill()
     }
+    if (strokeColor) {
+      this.ctx.strokeStyle = strokeColor
+      this.ctx.stroke()
+    }
   }
 
-  drawLine = (x1: number, y1: number, x2: number, y2: number, color: string) => {
+  drawLine = (p1: Position, p2: Position, color: string) => {
     this.ctx.beginPath()
+    const { x: x1, y: y1 } = p1
+    const { x: x2, y: y2 } = p2
     this.ctx.moveTo(x1, y1)
     this.ctx.lineTo(x2, y2)
     this.ctx.strokeStyle = color
@@ -106,10 +109,10 @@ export default class Renderer {
     const beginX = (this.canvas.width / 2) % lineSpacing
     const beginY = (this.canvas.height / 2) % lineSpacing
     for (let x = beginX; x <= this.canvas.width; x += lineSpacing) {
-      this.drawLine(x, 0, x, this.canvas.height, '#333')
+      this.drawLine({ x, y: 0 }, { x, y: this.canvas.height }, '#333')
     }
     for (let y = beginY; y <= this.canvas.height; y += lineSpacing) {
-      this.drawLine(0, y, this.canvas.width, y, '#333')
+      this.drawLine({ x: 0, y }, { x: this.canvas.width, y }, '#333')
     }
   }
 

@@ -5,10 +5,10 @@ export type Position = {
   y: number
 }
 
-export interface GameObject {
-  renderer: Renderer
-  position: Position
-  direction: number
-  update: () => void
-  render: () => void
+export abstract class GameObject {
+  abstract renderer: Renderer
+  abstract position: Position
+  abstract direction: number
+  abstract update: (delta: number, keys: { [key: string]: boolean }) => void
+  abstract render: () => void
 }
