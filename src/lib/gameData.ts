@@ -1,7 +1,6 @@
 import Renderer from '@/lib/renderer'
 import Snake from '@/assets/snake'
 import { GameObject } from '@/lib/types'
-import { degreesToRadians } from '@/lib/util'
 
 export default class GameData {
   renderer: Renderer
@@ -33,12 +32,21 @@ export default class GameData {
           x: this.renderer.canvas.width / 2,
           y: this.renderer.canvas.height / 2,
         },
-        direction: 30,
-
-        segments,
+        segments: [7, 7, 7],
         renderer: this.renderer,
+        isPlayer: true,
+        color: '#73a',
       }),
     )
+
+    // for (let i = 0; i < 3; i++) {
+    //   this.assets.push(
+    //     new Snake({
+    //       segments: [10, 10, 10, 10, 10],
+    //       renderer: this.renderer,
+    //     }),
+    //   )
+    // }
   }
 
   update = () => {
@@ -49,25 +57,8 @@ export default class GameData {
     this.delta = delta
     this.frames++
 
-    const speed = 300
-    const turnSpeed = 360
-
-    if (this.keys['a'] && this.keys['w']) {
-      this.assets[0].direction -= (turnSpeed * this.delta) / 1000
-    }
-
-    if (this.keys['d'] && this.keys['w']) {
-      this.assets[0].direction += (turnSpeed * this.delta) / 1000
-    }
-
-    if (this.keys['w']) {
-      const movement = (speed * this.delta) / 1000
-      const radians = degreesToRadians(this.assets[0].direction)
-      const x = movement * Math.cos(radians)
-      const y = movement * Math.sin(radians)
-      this.assets[0].position.x += x
-      this.assets[0].position.y += y
-      this.assets[0].update()
-    }
+    this.assets.forEach(asset => {
+      asset.update(this.delta / 1000, this.keys)
+    })
   }
 }

@@ -1,3 +1,4 @@
+import color from 'color'
 import Renderer from '@/lib/renderer'
 import { Position, GameObject } from '@/lib/types'
 import Particle from '@/assets/particle'
@@ -12,33 +13,46 @@ import {
 } from '@/lib/util'
 
 export type ParticleInitializationOptions = {
-  position: Position
+  position?: Position
   segments: number[]
-  direction: number
+  direction?: number
   renderer: Renderer
+  isPlayer?: boolean
+  color?: string
 }
 
-export default class Snake implements GameObject {
+export default class Snake extends GameObject {
   position: Position
   segments: Particle[]
   direction: number
   renderer: Renderer
+  isPlayer: boolean
+  color: string
 
   constructor(initializationOptions: ParticleInitializationOptions) {
-    this.position = initializationOptions.position
-    this.direction = initializationOptions.direction
+    super()
     this.renderer = initializationOptions.renderer
+    this.position = initializationOptions.position || {
+      x: Math.floor(Math.random() * this.renderer.canvas.width),
+      y: Math.floor(Math.random() * this.renderer.canvas.height),
+    }
+    this.direction = initializationOptions.direction || Math.floor(Math.random() * 360)
+
+    this.isPlayer = initializationOptions.isPlayer || false
+    this.color =
+      initializationOptions.color ||
+      `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`
     this.segments = []
     let distanceFromOrigin = 0
     initializationOptions.segments.forEach((radius, idx) => {
-      let position = initializationOptions.position
+      let position = this.position
       if (idx > 0) {
         const prevSegmentRadius = initializationOptions.segments[idx - 1]
         distanceFromOrigin += prevSegmentRadius + 5
         const angle = degreesToRadians(this.direction - 180)
         const x = distanceFromOrigin * Math.cos(angle)
         const y = distanceFromOrigin * Math.sin(angle)
-        position = { x: position.x + x, y: position.y + y }
+        position = { x: this.position.x + x, y: this.position.y + y }
       }
       this.segments.push(
         new Particle({
@@ -49,10 +63,33 @@ export default class Snake implements GameObject {
         }),
       )
     })
-    this.update()
+    this.update(0, {})
   }
 
-  update = () => {
+  update = (delta: number, keys: { [key: string]: boolean }) => {
+    const moveSpeed = 200
+    const turnSpeed = 360
+    if (this.isPlayer) {
+      if (keys['a'] && keys['w']) {
+        this.direction -= turnSpeed * delta
+      }
+
+      if (keys['d'] && keys['w']) {
+        this.direction += turnSpeed * delta
+      }
+
+      if (keys['w']) {
+        const movement = moveSpeed * delta
+        const radians = degreesToRadians(this.direction)
+        const x = movement * Math.cos(radians)
+        const y = movement * Math.sin(radians)
+        this.position.x += x
+        this.position.y += y
+      }
+    } else {
+      // AI Logic
+    }
+
     this.segments.forEach((segment, idx) => {
       if (idx === 0) {
         segment.direction = this.direction
@@ -132,26 +169,48 @@ export default class Snake implements GameObject {
         segment.position.y,
         i % 2 === 0 ? segment.radius : 0,
       )
-      gradient.addColorStop(0, '#080')
-      gradient.addColorStop(1, '#070')
+      gradient.addColorStop(0, color(this.color).lighten(0.15).toString())
+      gradient.addColorStop(1, this.color)
 
       this.renderer.drawCircle({
         position: segment.position,
         radius: segment.radius,
         fillColor: gradient,
-        strokeColor: '',
       })
     }
 
     // Draw outline
-    this.renderer.drawSmoothShape(points, '#0A0', 'transparent')
+    this.renderer.drawSmoothShape(points, color(this.color).lighten(0.25).hex(), 'transparent')
 
     // Draw Eyes
     const headSegment = this.segments[0]
     const leftEyePosition = getRadialPoint(headSegment.position, headSegment.radius * 0.75, headSegment.direction - 30)
     const rightEyePosition = getRadialPoint(headSegment.position, headSegment.radius * 0.75, headSegment.direction + 30)
-    this.renderer.drawCircle({ position: leftEyePosition, radius: 5, fillColor: '#A00', strokeColor: '' })
-    this.renderer.drawCircle({ position: rightEyePosition, radius: 5, fillColor: '#A00', strokeColor: '' })
+    this.renderer.drawCircle({
+      position: leftEyePosition,
+      radius: headSegment.radius * 0.2,
+      fillColor: 'white',
+      strokeColor: 'black',
+    })
+    this.renderer.drawCircle({
+      position: rightEyePosition,
+      radius: headSegment.radius * 0.2,
+      fillColor: 'white',
+      strokeColor: 'black',
+    })
+
+    const leftPupilPosition = getRadialPoint(
+      headSegment.position,
+      headSegment.radius * 0.85,
+      headSegment.direction - 30,
+    )
+    const rightPulilPosition = getRadialPoint(
+      headSegment.position,
+      headSegment.radius * 0.85,
+      headSegment.direction + 30,
+    )
+    this.renderer.drawCircle({ position: leftPupilPosition, radius: headSegment.radius * 0.1, fillColor: 'black' })
+    this.renderer.drawCircle({ position: rightPulilPosition, radius: headSegment.radius * 0.1, fillColor: 'black' })
 
     // Render Spine
     // this.segments.forEach((segment, idx) => {
