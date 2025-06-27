@@ -28,6 +28,8 @@ export default class Snake extends GameObject {
   renderer: Renderer
   isPlayer: boolean
   color: string
+  stomach: number
+  stomachTick: number
 
   constructor(initializationOptions: ParticleInitializationOptions) {
     super()
@@ -43,6 +45,8 @@ export default class Snake extends GameObject {
       initializationOptions.color ||
       `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`
     this.segments = []
+    this.stomach = 0
+    this.stomachTick = 0
     let distanceFromOrigin = 0
     initializationOptions.segments.forEach((radius, idx) => {
       let position = this.position
@@ -67,6 +71,40 @@ export default class Snake extends GameObject {
   }
 
   update = (delta: number, keys: { [key: string]: boolean }) => {
+    this.stomachTick += delta
+    if (this.stomachTick > 1) {
+      this.stomachTick = 0
+      if (this.stomach > 0) {
+        this.segments[0].radius++
+        this.stomach--
+      }
+      this.segments.forEach((segment, idx) => {
+        if (idx > 0) {
+          if (this.segments[idx - 1].radius > segment.radius) {
+            const transfer = Math.ceil((this.segments[idx - 1].radius - segment.radius) / 2)
+            // console.log(transfer)
+            this.segments[idx - 1].radius -= transfer
+            segment.radius += transfer
+          }
+        }
+      })
+      if (
+        this.segments.reduce((acc, segment) => acc + segment.radius, 0) / this.segments.length / 2 >
+        this.segments.length
+      ) {
+        this.segments.push(
+          new Particle({
+            direction: this.direction,
+            radius: 0,
+            position: this.segments[this.segments.length - 1].position,
+            renderer: this.renderer,
+          }),
+        )
+      }
+
+      console.log(this.segments.map(segment => segment.radius))
+      // this.stomach--
+    }
     const moveSpeed = 200
     const turnSpeed = 360
     if (this.isPlayer) {

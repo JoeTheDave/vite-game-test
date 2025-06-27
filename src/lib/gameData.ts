@@ -1,6 +1,17 @@
 import Renderer from '@/lib/renderer'
 import Snake from '@/assets/snake'
+import Food from '@/assets/food'
 import { GameObject } from '@/lib/types'
+
+import {
+  degreesToRadians,
+  distanceBetween,
+  angleBetween,
+  radiansToDegrees,
+  angleBetweenPoints,
+  getRotatedPoint,
+  getRadialPoint,
+} from '@/lib/util'
 
 export default class GameData {
   renderer: Renderer
@@ -32,12 +43,20 @@ export default class GameData {
           x: this.renderer.canvas.width / 2,
           y: this.renderer.canvas.height / 2,
         },
-        segments: [7, 7, 7],
+        segments: [7, 7, 7, 7, 7],
         renderer: this.renderer,
         isPlayer: true,
         color: '#73a',
       }),
     )
+
+    for (let i = 0; i < 30; i++) {
+      this.assets.push(
+        new Food({
+          renderer: this.renderer,
+        }),
+      )
+    }
 
     // for (let i = 0; i < 3; i++) {
     //   this.assets.push(
@@ -56,6 +75,28 @@ export default class GameData {
     this.elapsedTime += delta
     this.delta = delta
     this.frames++
+
+    const snakes = this.assets.filter(asset => asset instanceof Snake) as Snake[]
+    const foods = this.assets.filter(asset => asset instanceof Food) as Food[]
+
+    snakes.forEach(snake => {
+      foods.forEach(food => {
+        if (distanceBetween(snake.position, food.position) < snake.segments[0].radius) {
+          snake.stomach += 1
+          food.position = {
+            x: Math.floor(Math.random() * this.renderer.canvas.width),
+            y: Math.floor(Math.random() * this.renderer.canvas.height),
+          }
+          food.color = `rgb(${Math.floor(Math.random() * 155) + 100}, ${Math.floor(Math.random() * 155) + 100}, ${
+            Math.floor(Math.random() * 155) + 100
+          })`
+          food.size = Math.floor(Math.random() * 5)
+          // this.assets.indexOf(food) > -1 && this.assets.splice(this.assets.indexOf(food), 1)
+        }
+      })
+    })
+
+    // console.log(snakes, food)
 
     this.assets.forEach(asset => {
       asset.update(this.delta / 1000, this.keys)
